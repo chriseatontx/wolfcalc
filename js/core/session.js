@@ -5,7 +5,7 @@ import { evaluateExpression } from './evaluator.js';
 import { applyScientific } from './scientific.js';
 
 export function createSession() {
-  return { ...createCalculator(), expression: '', history: '', answer: '0', entryStart: true, justEvaluated: false, shiftActive: false };
+  return { ...createCalculator(), expression: '', history: '', answer: '0', entryStart: true, justEvaluated: false, shiftActive: false, activeOperandExpression: '', nPrOpen: false };
 }
 
 export function formatNumber(value) {
@@ -15,11 +15,14 @@ export function formatNumber(value) {
 }
 
 function freshEntry(state) {
-  return { ...state, expression: '', history: '', display: '0', error: false, entryStart: true, justEvaluated: false };
+  return { ...state, expression: '', history: '', display: '0', error: false, entryStart: true, justEvaluated: false, activeOperandExpression: '', nPrOpen: false };
 }
 
 function expressionPrefix(state) {
   if (state.justEvaluated) return '';
+  if (state.activeOperandExpression && state.expression.endsWith(state.activeOperandExpression)) {
+    return state.expression.slice(0, -state.activeOperandExpression.length);
+  }
   if (!state.entryStart && state.expression.endsWith(state.display)) {
     return state.expression.slice(0, -state.display.length);
   }
@@ -46,7 +49,7 @@ export function enterDigit(state, digit) {
     expression = expression.endsWith(display) ? expression.slice(0, -display.length) + next : expression + digit;
     display = next;
   }
-  return { ...state, expression, display, error: false, entryStart: false, justEvaluated: false, history: '' };
+  return { ...state, expression, display, error: false, entryStart: false, justEvaluated: false, history: '', activeOperandExpression: '' };
 }
 
 export function enterDecimal(state) {
@@ -66,17 +69,19 @@ export function enterDecimal(state) {
     display += '.';
     expression = expression.endsWith(state.display) ? expression.slice(0, -state.display.length) + display : expression + '.';
   }
-  return { ...state, expression, display, error: false, entryStart: false, justEvaluated: false, history: '' };
+  return { ...state, expression, display, error: false, entryStart: false, justEvaluated: false, history: '', activeOperandExpression: '' };
 }
 
 export function enterOperator(state, operator) {
   if (!['+', '-', '*', '/', '^'].includes(operator)) return state;
   if (state.error) return state;
   let expression = state.justEvaluated ? state.display : state.expression;
+  const nPrOpen = state.nPrOpen && !state.entryStart;
+  if (nPrOpen) expression += ')';
   if (!expression) expression = state.display === '0' && operator === '-' ? '' : state.display;
   if (/[+*/^]$/.test(expression) && operator !== '-') expression = expression.slice(0, -1);
   expression += operator;
-  return { ...state, expression, entryStart: true, justEvaluated: false, history: '' };
+  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nPrOpen: false };
 }
 
 export function enterParenthesis(state, character) {
@@ -85,36 +90,91 @@ export function enterParenthesis(state, character) {
   if (character === '(') {
     if (/[0-9πe)]$/.test(expression)) expression += '*';
     expression += '(';
-    return { ...state, expression, display: '0', entryStart: true, justEvaluated: false, history: '' };
+    return { ...state, expression, display: '0', entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '' };
   }
   const opens = (expression.match(/\(/g) || []).length;
   const closes = (expression.match(/\)/g) || []).length;
   if (opens <= closes || /[+\-*/^(]$/.test(expression)) return state;
   expression += ')';
-  return { ...state, expression, entryStart: true, justEvaluated: false, history: '' };
+  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '' };
 }
 
-const inverseFunctions = { sin: 'asin', cos: 'acos', tan: 'atan', log10: 'tenPower', ln: 'exp' };
+const inverseFunctions = {
+  sin: 'asin', cos: 'acos', tan: 'atan', log10: 'tenPower', ln: 'exp',
+  sqrt: 'cubeRoot', square: 'cube', reciprocal: 'absolute', factorial: 'nPr',
+};
+
+function operationExpression(operation, operand) {
+  if (operation === 'tenPower') return `pow10(${operand})`;
+  if (operation === 'exp') return `exp(${operand})`;
+  if (operation === 'square') return `(${operand})^2`;
+  if (operation === 'cube') return `(${operand})^3`;
+  if (operation === 'reciprocal') return `1/(${operand})`;
+  if (operation === 'toggleSign') return `-(${operand})`;
+  if (operation === 'percent') return `${operand}%`;
+  if (operation === 'factorial') return `${operand}!`;
+  if (operation === 'cubeRoot') return `cbrt(${operand})`;
+  if (operation === 'absolute') return `abs(${operand})`;
+  return `${operation}(${operand})`;
+}
+
+function symbolicDisplay(operation, operand) {
+  if (operation === 'square') return `${operand}²`;
+  if (operation === 'cube') return `${operand}³`;
+  if (operation === 'cubeRoot') return `∛(${operand})`;
+  if (operation === 'absolute') return `|${operand}|`;
+  return `${operation}(${operand})`;
+}
 
 export function applyFunction(state, requestedOperation) {
   if (state.error) return state;
   const operation = state.shiftActive ? inverseFunctions[requestedOperation] ?? requestedOperation : requestedOperation;
   const operand = state.display;
-  let expression;
-  if (state.entryStart && /[+\-*/^(]$/.test(state.expression)) {
-    expression = `${state.expression}${operation === 'tenPower' ? 'pow10' : operation}(`;
-    return { ...state, expression, display: '0', history: '', entryStart: true, justEvaluated: false, shiftActive: false };
-  } else {
+
+  if (operation === 'nPr') {
+    const firstOperand = state.activeOperandExpression || (!state.entryStart ? operand : '');
+    if (!firstOperand || (state.entryStart && /[+\-*/^(]$/.test(state.expression))) return state;
     const prefix = expressionPrefix(state);
-    const operandExpression = operation === 'tenPower' ? `pow10(${operand})`
-      : operation === 'exp' ? `exp(${operand})`
-        : operation === 'square' ? `(${operand})^2`
-          : operation === 'reciprocal' ? `1/(${operand})`
-            : operation === 'toggleSign' ? `-(${operand})`
-              : operation === 'percent' ? `${operand}%`
-                : operation === 'factorial' ? `${operand}!`
-                  : `${operation}(${operand})`;
+    return {
+      ...state,
+      expression: `${prefix}nPr(${firstOperand},`,
+      display: '0',
+      history: '',
+      entryStart: true,
+      justEvaluated: false,
+      shiftActive: false,
+      activeOperandExpression: '',
+      nPrOpen: true,
+    };
+  }
+
+  let expression;
+  let operandExpression;
+  if (state.entryStart && /[+\-*/^(]$/.test(state.expression)) {
+    const functionName = operation === 'tenPower' ? 'pow10'
+      : operation === 'cubeRoot' ? 'cbrt'
+        : operation === 'absolute' ? 'abs' : operation;
+    expression = `${state.expression}${functionName}(`;
+    return { ...state, expression, display: '0', history: '', entryStart: true, justEvaluated: false, shiftActive: false, activeOperandExpression: '' };
+  } else {
+    const symbolic = Boolean(state.activeOperandExpression && state.activeOperandExpression.includes('x'));
+    const currentOperand = symbolic ? state.activeOperandExpression : operand;
+    const prefix = expressionPrefix(state);
+    operandExpression = operationExpression(operation, currentOperand);
     expression = prefix + operandExpression;
+    if (symbolic) {
+      return {
+        ...state,
+        expression,
+        display: symbolicDisplay(operation, state.display),
+        error: false,
+        history: '',
+        entryStart: true,
+        justEvaluated: false,
+        shiftActive: false,
+        activeOperandExpression: operandExpression,
+      };
+    }
   }
 
   const result = applyScientific({ ...state, display: operand }, operation);
@@ -125,6 +185,7 @@ export function applyFunction(state, requestedOperation) {
     entryStart: true,
     justEvaluated: false,
     shiftActive: false,
+    activeOperandExpression: operandExpression,
   };
 }
 
@@ -154,7 +215,7 @@ export function enterVariable(state, variable = 'x') {
   if (!state.entryStart && expression.endsWith(state.display)) expression = expressionPrefix(state);
   if (/[0-9πe)]$/.test(expression)) expression += '*';
   expression += variable;
-  return { ...state, expression, display: variable, entryStart: true, justEvaluated: false, history: '' };
+  return { ...state, expression, display: variable, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: variable };
 }
 
 export function evaluateSession(state) {
@@ -165,7 +226,7 @@ export function evaluateSession(state) {
   const value = evaluateExpression(expression, { angleMode: state.angleMode });
   if (value === 'Error') return { ...state, expression, history: expression, display: 'Error', error: true, entryStart: true, justEvaluated: false };
   const answer = formatNumber(value);
-  return { ...state, expression, history: expression, answer, display: answer, error: false, entryStart: true, justEvaluated: true, shiftActive: false };
+  return { ...state, expression, history: expression, answer, display: answer, error: false, entryStart: true, justEvaluated: true, shiftActive: false, nPrOpen: false };
 }
 
 export function eraseEntry(state) {

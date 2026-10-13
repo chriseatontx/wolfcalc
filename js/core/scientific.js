@@ -8,6 +8,13 @@ function factorial(value) {
   return result;
 }
 
+function permutation(n, r) {
+  if (!Number.isSafeInteger(n) || !Number.isSafeInteger(r) || n < 0 || r < 0 || r > n || r > 170) return NaN;
+  let result = 1;
+  for (let offset = 0; offset < r; offset += 1) result *= n - offset;
+  return result;
+}
+
 /** Apply a pure scientific operation to the calculator's displayed number. */
 export function applyScientific(state, operation, operand) {
   const value = Number(state.display);
@@ -31,8 +38,12 @@ export function applyScientific(state, operation, operand) {
     case 'exp': result = Math.exp(value); break;
     case 'tenPower': result = 10 ** value; break;
     case 'sqrt': result = Math.sqrt(value); break;
+    case 'cubeRoot': result = Math.cbrt(value); break;
     case 'square': result = value ** 2; break;
+    case 'cube': result = value ** 3; break;
+    case 'absolute': result = Math.abs(value); break;
     case 'power': result = value ** Number(operand); break;
+    case 'nPr': result = permutation(value, Number(operand)); break;
     case 'reciprocal': result = value === 0 ? NaN : 1 / value; break;
     case 'factorial': result = factorial(value); break;
     case 'toggleSign': result = -value; break;

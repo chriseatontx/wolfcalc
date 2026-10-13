@@ -23,7 +23,7 @@ function tokenize(expression) {
       continue;
     }
     const symbol = input[index];
-    if ('+-^()%!π'.includes(symbol) || symbol === '*' || symbol === '/' || symbol === '×' || symbol === '÷' || symbol === '−') {
+    if ('+-^()%!,π'.includes(symbol) || symbol === '*' || symbol === '/' || symbol === '×' || symbol === '÷' || symbol === '−') {
       tokens.push(symbol === '×' ? '*' : symbol === '÷' ? '/' : symbol === '−' ? '-' : symbol);
       index += 1;
       continue;
@@ -54,14 +54,18 @@ function parse(tokens, angleMode = 'DEG', variables = {}) {
     if (value === 'x' && Number.isFinite(variables.x)) return variables.x;
     const operations = {
       sin: 'sin', cos: 'cos', tan: 'tan', asin: 'asin', acos: 'acos', atan: 'atan',
-      log: 'log10', log10: 'log10', ln: 'ln', sqrt: 'sqrt', exp: 'exp',
+      log: 'log10', log10: 'log10', ln: 'ln', sqrt: 'sqrt', cbrt: 'cubeRoot', abs: 'absolute',
+      cube: 'cube', exp: 'exp', npr: 'nPr',
       pow10: 'tenPower',
     };
     if (typeof value === 'string' && operations[value]) {
       if (take() !== '(') throw new SyntaxError('Expected opening parenthesis');
       const operand = sum();
+      const secondOperand = value === 'npr'
+        ? (take() === ',' ? sum() : (() => { throw new SyntaxError('Expected second permutation operand'); })())
+        : undefined;
       if (take() !== ')') throw new SyntaxError('Missing closing parenthesis');
-      const result = Number(applyScientific({ display: String(operand), angleMode }, operations[value]).display);
+      const result = Number(applyScientific({ display: String(operand), angleMode }, operations[value], secondOperand).display);
       if (!Number.isFinite(result)) throw new SyntaxError('Function domain error');
       return result;
     }

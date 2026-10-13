@@ -25,13 +25,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Stage calculator site
+        run: |
+          mkdir -p _site
+          cp index.html styles.css _site/
+          cp -R js _site/js
       - name: Upload calculator site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: |
-            index.html
-            styles.css
-            js/
+          path: _site
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4

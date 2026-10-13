@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#202629" />
+    <meta name="description" content="A tactile, vintage-inspired scientific calculator for the web." />
+    <title>calc.wolfcreek · Scientific Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="calculator" aria-label="calc.wolfcreek scientific calculator">
+        <header class="brand">
+          <div class="brand__mark" aria-hidden="true">CW</div>
+          <div class="brand__name">
+            <span class="brand__company">WOLFCREEK</span>
+            <span class="brand__model">calc.wolfcreek <small>SCIENTIFIC CALCULATOR</small></span>
+          </div>
+          <span class="brand__badge">WEB EDITION</span>
+        </header>
+
+        <div class="screen-bezel">
+          <div class="screen" role="group" aria-label="Calculator display">
+            <div id="calculator-view" class="calculator-view">
+              <div class="screen__status" aria-label="Calculator status">
+                <span id="angle-status">DEG</span>
+                <span id="memory-status" class="screen__memory">M</span>
+                <span id="shift-status" class="screen__shift">2ND</span>
+                <span class="screen__ready">READY</span>
+              </div>
+              <output id="expression" class="screen__expression" aria-label="Current expression">&nbsp;</output>
+              <output id="display" class="screen__result" aria-live="polite" aria-atomic="true">0</output>
+              <div class="screen__menu" aria-label="Soft-key menu">
+                <span>MODE</span><span>M+</span><span>M−</span><span>MR</span><span>MC</span>
+              </div>
+            </div>
+            <div id="graph-view" class="graph-view" hidden>
+              <div class="graph-view__heading"><span>GRAPH</span><span id="graph-equation">y = x</span></div>
+              <canvas id="graph-canvas" role="img" aria-label="Graph of y equals x"></canvas>
+              <div class="graph-view__range">X: −10 … 10&nbsp;&nbsp; Y: −10 … 10</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="soft-keys" aria-label="Soft keys">
+          <button class="key key--soft" data-action="angle" data-kbd="F1" aria-label="F1: toggle degrees or radians"><span>F1</span></button>
+          <button class="key key--soft" data-action="memory" data-value="M+" data-kbd="F2" aria-label="F2: add display to memory"><span>F2</span></button>
+          <button class="key key--soft" data-action="memory" data-value="M-" data-kbd="F3" aria-label="F3: subtract display from memory"><span>F3</span></button>
+          <button class="key key--soft" data-action="memory" data-value="MR" data-kbd="F4" aria-label="F4: recall memory"><span>F4</span></button>
+          <button class="key key--soft" data-action="memory" data-value="MC" data-kbd="F5" aria-label="F5: clear memory"><span>F5</span></button>
+        </div>
+
+        <div class="keypad-wrap">
+          <div id="button-grid" class="keypad" aria-label="Calculator keypad">
+            <button class="key key--utility key--second" data-action="shift" data-kbd="Shift" aria-label="2nd: toggle alternate functions"><span class="key__legend">2ND</span><small class="key__secondary">SHIFT</small></button>
+            <button class="key key--utility key--unsupported" disabled aria-label="ALPHA unsupported" title="ALPHA character entry is not implemented"><span class="key__legend">ALPHA</span><small class="key__secondary">UNSUPPORTED</small></button>
+            <button class="key key--utility" data-action="angle" data-kbd="d" aria-label="MODE: toggle degrees and radians"><span class="key__legend">MODE</span><small class="key__secondary">DEG / RAD</small></button>
+            <button class="key key--utility" data-action="backspace" data-kbd="Backspace" aria-label="Delete last character"><span class="key__legend">DEL</span><small class="key__secondary">⌫</small></button>
+            <button class="key key--utility key--clear" data-action="clear" data-kbd="Escape" aria-label="All clear"><span class="key__legend">CLEAR</span><small class="key__secondary">AC</small></button>
+
+            <button class="key key--function" data-action="function" data-value="sin" data-kbd="s" aria-label="Sine; with 2nd, inverse sine"><small class="key__secondary">sin⁻¹</small><span class="key__legend">sin</span></button>
+            <button class="key key--function" data-action="function" data-value="cos" data-kbd="c" aria-label="Cosine; with 2nd, inverse cosine"><small class="key__secondary">cos⁻¹</small><span class="key__legend">cos</span></button>
+            <button class="key key--function" data-action="function" data-value="tan" data-kbd="t" aria-label="Tangent; with 2nd, inverse tangent"><small class="key__secondary">tan⁻¹</small><span class="key__legend">tan</span></button>
+            <button class="key key--function" data-action="function" data-value="log10" data-kbd="l" aria-label="Base ten logarithm; with 2nd, ten to the power"><small class="key__secondary">10ˣ</small><span class="key__legend">LOG</span></button>
+            <button class="key key--function" data-action="function" data-value="ln" data-kbd="n" aria-label="Natural logarithm; with 2nd, exponential"><small class="key__secondary">eˣ</small><span class="key__legend">LN</span></button>
+
+            <button class="key key--function" data-action="function" data-value="sqrt" aria-label="Square root"><small class="key__secondary">³√x</small><span class="key__legend">√</span></button>
+            <button class="key key--function" data-action="function" data-value="square" aria-label="Square"><small class="key__secondary">x³</small><span class="key__legend">x²</span></button>
+            <button class="key key--function" data-action="operator" data-value="^" data-kbd="^" aria-label="Power"><small class="key__secondary">y√x</small><span class="key__legend">xʸ</span></button>
+            <button class="key key--function" data-action="function" data-value="reciprocal" aria-label="Reciprocal"><small class="key__secondary">|x|</small><span class="key__legend">1/x</span></button>
+            <button class="key key--function" data-action="function" data-value="factorial" aria-label="Factorial"><small class="key__secondary">nPr</small><span class="key__legend">x!</span></button>
+
+            <button class="key key--function" data-action="paren" data-value="(" data-kbd="(" aria-label="Open parenthesis"><span class="key__legend">(</span></button>
+            <button class="key key--function" data-action="paren" data-value=")" data-kbd=")" aria-label="Close parenthesis"><span class="key__legend">)</span></button>
+            <button class="key key--function" data-action="constant" data-value="pi" aria-label="Pi"><small class="key__secondary">ANGLE</small><span class="key__legend">π</span></button>
+            <button class="key key--function" data-action="constant" data-value="e" aria-label="Euler's number"><small class="key__secondary">EXP</small><span class="key__legend">e</span></button>
+            <button class="key key--operator" data-action="operator" data-value="/" data-kbd="/" aria-label="Divide"><span class="key__legend">÷</span></button>
+
+            <button class="key key--digit" data-action="digit" data-value="7" data-kbd="7" aria-label="7"><span class="key__legend">7</span></button>
+            <button class="key key--digit" data-action="digit" data-value="8" data-kbd="8" aria-label="8"><span class="key__legend">8</span></button>
+            <button class="key key--digit" data-action="digit" data-value="9" data-kbd="9" aria-label="9"><span class="key__legend">9</span></button>
+            <button class="key key--operator" data-action="operator" data-value="*" data-kbd="*" aria-label="Multiply"><span class="key__legend">×</span></button>
+            <button class="key key--operator" data-action="function" data-value="percent" aria-label="Percent"><span class="key__legend">%</span></button>
+
+            <button class="key key--digit" data-action="digit" data-value="4" data-kbd="4" aria-label="4"><span class="key__legend">4</span></button>
+            <button class="key key--digit" data-action="digit" data-value="5" data-kbd="5" aria-label="5"><span class="key__legend">5</span></button>
+            <button class="key key--digit" data-action="digit" data-value="6" data-kbd="6" aria-label="6"><span class="key__legend">6</span></button>
+            <button class="key key--operator" data-action="operator" data-value="-" data-kbd="-" aria-label="Subtract"><span class="key__legend">−</span></button>
+            <button class="key key--operator" data-action="function" data-value="toggleSign" aria-label="Change sign"><small class="key__secondary">(−)</small><span class="key__legend">±</span></button>
+
+            <button class="key key--digit" data-action="digit" data-value="1" data-kbd="1" aria-label="1"><span class="key__legend">1</span></button>
+            <button class="key key--digit" data-action="digit" data-value="2" data-kbd="2" aria-label="2"><span class="key__legend">2</span></button>
+            <button class="key key--digit" data-action="digit" data-value="3" data-kbd="3" aria-label="3"><span class="key__legend">3</span></button>
+            <button class="key key--operator" data-action="operator" data-value="+" data-kbd="+" aria-label="Add"><span class="key__legend">+</span></button>
+            <button class="key key--memory" data-action="memory" data-value="M+" aria-label="Add display to memory"><small class="key__secondary">STO►</small><span class="key__legend">M+</span></button>
+
+            <button class="key key--digit key--zero" data-action="digit" data-value="0" data-kbd="0" aria-label="0"><span class="key__legend">0</span></button>
+            <button class="key key--digit" data-action="decimal" data-kbd="." aria-label="Decimal point"><span class="key__legend">.</span></button>
+            <button class="key key--memory" data-action="answer" data-kbd="a" aria-label="Insert previous answer"><small class="key__secondary">RECALL</small><span class="key__legend">ANS</span></button>
+            <button class="key key--enter" data-action="equals" data-kbd="Enter" aria-label="Enter or equals"><span class="key__legend">ENTER</span><small class="key__secondary">=</small></button>
+            <button class="key key--memory" data-action="memory" data-value="M-" aria-label="Subtract display from memory"><small class="key__secondary">RCL►</small><span class="key__legend">M−</span></button>
+
+            <button class="key key--memory" data-action="memory" data-value="MC" aria-label="Clear memory"><span class="key__legend">MC</span></button>
+            <button class="key key--memory" data-action="memory" data-value="MR" aria-label="Recall memory"><span class="key__legend">MR</span></button>
+            <button class="key key--function" data-action="variable" data-value="x" data-kbd="x" aria-label="Insert variable x"><span class="key__legend">x</span></button>
+            <button class="key key--function" data-action="graph" data-kbd="g" aria-label="Toggle graph view"><span class="key__legend">GRAPH</span></button>
+            <button class="key key--utility" data-action="clear-entry" data-kbd="Delete" aria-label="Clear current entry"><span class="key__legend">CE</span></button>
+          </div>
+        </div>
+
+        <footer class="calculator__footer">
+          <span>LCD • 21 × 8 CHARACTER STYLE</span>
+          <span>FIVE FUNCTION KEYS · SESSION MEMORY</span>
+        </footer>
+      </section>
+
+      <aside class="page-note">
+        <p>An independent calculator with an original, vintage-inspired interface. Statistics, programmable menus, and ALPHA entry are not implemented.</p>
+        <p class="keyboard-hint">Keyboard: digits · <kbd>+</kbd> <kbd>−</kbd> <kbd>*</kbd> <kbd>/</kbd> <kbd>^</kbd> · <kbd>Enter</kbd> · <kbd>Backspace</kbd> · <kbd>Esc</kbd> · <kbd>d</kbd> for DEG/RAD</p>
+      </aside>
+    </main>
+    <script type="module" src="js/ui.js"></script>
+  </body>
+</html>

@@ -31,3 +31,12 @@ test('evaluates calculator functions, constants, factorials, and percentages', (
   assert.equal(evaluateExpression('sin(90)', { angleMode: 'RAD' }), Math.sin(90));
   assert.equal(evaluateExpression('tan(90)'), 'Error');
 });
+
+test('evaluates the advertised shifted functions, including two-operand nPr', () => {
+  assert.equal(evaluateExpression('cbrt(-8)'), -2);
+  assert.equal(evaluateExpression('(-2)^3'), -8);
+  assert.equal(evaluateExpression('abs(-7)'), 7);
+  assert.equal(evaluateExpression('nPr(5,2)'), 20);
+  assert.equal(evaluateExpression('2+nPr(5,2)*3'), 62);
+  assert.equal(evaluateExpression('nPr(3,4)'), 'Error');
+});

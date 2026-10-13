@@ -26,6 +26,10 @@ test('logarithms, powers, roots, reciprocal, and factorial calculate', () => {
   close(calculate(2, 'power', 3), 8);
   close(calculate(4, 'reciprocal'), 0.25);
   close(calculate(5, 'factorial'), 120);
+  close(calculate(-8, 'cubeRoot'), -2);
+  close(calculate(-2, 'cube'), -8);
+  close(calculate(-7, 'absolute'), 7);
+  close(calculate(5, 'nPr', 2), 20);
 });
 
 test('sign toggle, percent, and constants calculate', () => {
@@ -36,12 +40,13 @@ test('sign toggle, percent, and constants calculate', () => {
 });
 
 test('invalid domains and unknown operations produce calculator Error state', () => {
-  for (const [value, operation] of [
+  for (const [value, operation, operand] of [
     [-1, 'sqrt'], [2, 'asin'], [-2, 'asin'], [2, 'acos'], [-2, 'acos'],
     [0, 'log10'], [-1, 'log10'], [0, 'ln'], [-1, 'ln'], [90, 'tan'],
     [0, 'reciprocal'], [-1, 'factorial'], [2.5, 'factorial'], [1, 'unknown'],
+    [-1, 'nPr', 1], [3, 'nPr', -1], [3, 'nPr', 4], [3.5, 'nPr', 1],
   ]) {
-    const state = calculate(value, operation);
+    const state = calculate(value, operation, operand);
     assert.equal(state.display, 'Error', `${operation}(${value})`);
     assert.equal(state.error, true, `${operation}(${value})`);
   }

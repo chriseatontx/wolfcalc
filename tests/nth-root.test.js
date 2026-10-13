@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyScientific } from '../js/core/scientific.js';
 import { evaluateExpression } from '../js/core/evaluator.js';
-import { createSession, enterDigit, enterNthRoot, enterOperator, evaluateSession, toggleShift } from '../js/core/session.js';
-import { sampleGraph } from '../js/core/graph.js';
+import { createSession, enterConstant, enterDigit, enterNthRoot, enterOperator, enterParenthesis, enterVariable, evaluateSession, insertAnswer, toggleShift, applyFunction } from '../js/core/session.js';
+import { completeExpression, sampleGraph } from '../js/core/graph.js';
 
 test('nth root calculates real roots and rejects undefined real domains', () => {
   assert.equal(applyScientific({ display: '27' }, 'nthRoot', 3).display, '3');
@@ -47,4 +47,59 @@ test('2ND plus xʸ enters an nth root and keeps it composable and graphable', ()
 
   const points = sampleGraph('nthRoot(x,3)', { xMin: -8, xMax: 8, samples: 2 });
   assert.deepEqual(points.map(point => point.y), [-2, 0, 2]);
+});
+
+test('keyboard power operation remains ordinary exponentiation', () => {
+  let state = createSession();
+  state = enterDigit(state, '2');
+  state = enterOperator(state, '^');
+  state = enterDigit(state, '3');
+  assert.equal(evaluateSession(state).display, '8');
+});
+
+test('manual root closing clears pending state before continuing an expression', () => {
+  let state = createSession();
+  for (const digit of '27') state = enterDigit(state, digit);
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = enterDigit(state, '3');
+  state = enterParenthesis(state, ')');
+  assert.equal(state.nthRootOpen, false);
+  state = enterDigit(state, '2');
+  state = enterOperator(state, '+');
+  state = enterDigit(state, '1');
+  assert.equal(evaluateSession(state).display, '7');
+});
+
+test('nth-root entry accepts constants and recalled answers as radicands', () => {
+  let state = enterConstant(createSession(), 'pi');
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  assert.equal(state.expression, 'nthRoot(π,');
+  state = enterDigit(state, '2');
+  assert.ok(Math.abs(Number(evaluateSession(state).display) - Math.sqrt(Math.PI)) < 1e-12);
+
+  state = insertAnswer({ ...createSession(), answer: '16' });
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = enterDigit(state, '2');
+  assert.equal(evaluateSession(state).display, '4');
+});
+
+test('root index accepts a scientific function and keypad graphing closes the root', () => {
+  let state = createSession();
+  for (const digit of '16') state = enterDigit(state, digit);
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = applyFunction(state, 'sqrt');
+  state = enterDigit(state, '4');
+  assert.equal(evaluateSession(state).display, '4');
+
+  state = enterVariable(createSession(), 'x');
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = enterDigit(state, '3');
+  assert.equal(state.expression, 'nthRoot(x,3');
+  assert.equal(completeExpression(state.expression), 'nthRoot(x,3)');
+  assert.deepEqual(sampleGraph(state.expression, { xMin: -8, xMax: 8, samples: 2 }).map(point => point.y), [-2, 0, 2]);
 });

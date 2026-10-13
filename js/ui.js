@@ -3,7 +3,7 @@ import {
   enterDigit, enterOperator, enterNthRoot, enterParenthesis, enterVariable, eraseEntry, evaluateSession, insertAnswer,
   sessionMemory, toggleSessionAngleMode, toggleShift,
 } from './core/session.js';
-import { sampleGraph } from './core/graph.js';
+import { completeExpression, sampleGraph } from './core/graph.js';
 
 const keypad = document.getElementById('button-grid');
 const expressionOutput = document.getElementById('expression');
@@ -20,7 +20,7 @@ let state = createSession();
 let graphVisible = false;
 
 function drawGraph() {
-  const equation = state.expression || state.history || 'x';
+  const equation = completeExpression(state.expression || state.history || 'x');
   graphEquation.textContent = `y = ${equation}`;
   graphCanvas.setAttribute('aria-label', `Graph of y equals ${equation}`);
   const bounds = graphCanvas.getBoundingClientRect();
@@ -134,7 +134,7 @@ document.addEventListener('keydown', event => {
   else if (key === 'Backspace') target = keypad.querySelector('[data-action="backspace"]');
   else if (key === 'Delete') target = keypad.querySelector('[data-action="clear-entry"]');
   else if (key === 'Escape') target = keypad.querySelector('[data-action="clear"]');
-  else if (key === 'Shift') target = keypad.querySelector('[data-action="shift"]');
+  else if (key.toLowerCase() === 'q') target = keypad.querySelector('[data-action="shift"]');
   else if (key.toLowerCase() === 'd') target = keypad.querySelector('[data-action="angle"]');
   else if (key.toLowerCase() === 'a') target = keypad.querySelector('[data-action="answer"]');
   else if (key.toLowerCase() === 'x') target = keypad.querySelector('[data-action="variable"]');

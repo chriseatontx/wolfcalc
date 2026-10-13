@@ -85,12 +85,32 @@ export function enterOperator(state, operator) {
   return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nPrOpen: false, nthRootOpen: false };
 }
 
+function lastUnclosedParenthesisIndex(expression) {
+  let depth = 0;
+  for (let index = expression.length - 1; index >= 0; index -= 1) {
+    if (expression[index] === ')') depth += 1;
+    else if (expression[index] === '(') {
+      if (depth === 0) return index;
+      depth -= 1;
+    }
+  }
+  return -1;
+}
+
 export function enterNthRoot(state) {
   if (state.error) return state;
-  const radicand = state.activeOperandExpression
-    || (!state.entryStart || state.justEvaluated ? state.display : '');
-  if (!radicand || (state.entryStart && !state.justEvaluated && ['+', '-', '*', '/', '^', '('].some(character => state.expression.endsWith(character)))) return state;
-  const prefix = expressionPrefix(state);
+  const expression = state.justEvaluated ? state.display : state.expression;
+  let radicand = '';
+  if (state.activeOperandExpression && expression.endsWith(state.activeOperandExpression)) {
+    radicand = state.activeOperandExpression;
+  } else if (expression.endsWith('π') || expression.endsWith('e')) {
+    radicand = expression.slice(-1);
+  } else if (state.display && expression.endsWith(state.display)) {
+    radicand = state.display;
+  }
+  const lastCharacter = expression.slice(-1);
+  if (!radicand || (!state.justEvaluated && ['+', '-', '*', '/', '^', '(', ','].includes(lastCharacter))) return state;
+  const prefix = state.justEvaluated ? '' : expression.slice(0, -radicand.length);
   return {
     ...state,
     expression: `${prefix}nthRoot(${radicand},`,
@@ -116,8 +136,10 @@ export function enterParenthesis(state, character) {
   const opens = (expression.match(/\(/g) || []).length;
   const closes = (expression.match(/\)/g) || []).length;
   if (opens <= closes || /[+\-*/^(]$/.test(expression)) return state;
+  const closeIndex = lastUnclosedParenthesisIndex(expression);
+  const closesNthRoot = state.nthRootOpen && closeIndex >= 0 && expression.slice(0, closeIndex).endsWith('nthRoot');
   expression += ')';
-  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '' };
+  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nthRootOpen: closesNthRoot ? false : state.nthRootOpen };
 }
 
 const inverseFunctions = {
@@ -171,7 +193,7 @@ export function applyFunction(state, requestedOperation) {
 
   let expression;
   let operandExpression;
-  if (state.entryStart && /[+\-*/^(]$/.test(state.expression)) {
+  if (state.entryStart && ['+', '-', '*', '/', '^', '(', ','].includes(state.expression.slice(-1))) {
     const functionName = operation === 'tenPower' ? 'pow10'
       : operation === 'cubeRoot' ? 'cbrt'
         : operation === 'absolute' ? 'abs' : operation;

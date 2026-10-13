@@ -1,5 +1,9 @@
 # calc.wolfcreek
 
+[**Open the live calculator →**](https://chriseatontx.github.io/wolfcalc/)
+
+![calc.wolfcreek scientific calculator](assets/wolfcalc-preview.jpg)
+
 calc.wolfcreek is a browser-based scientific calculator with an original interface informed by vintage graphing calculators. It uses plain HTML, CSS, and JavaScript and has no external runtime dependencies.
 
 ## Run locally
@@ -37,12 +41,12 @@ Statistics, programmable menus, and ALPHA character entry are not implemented. T
 - `js/ui.js`: browser interaction and display rendering
 - `tests/`: Node.js built-in test suite
 
-The project currently uses only Node.js built-in modules and browser APIs. Release licensing and third-party asset review are tracked in `TASKS.md`.
+The project uses only Node.js built-in modules and browser APIs.
 
 ## License
 
 This project is available under the MIT License. See `LICENSE` for the terms.
 
-## GitHub Pages preparation
+## GitHub Pages
 
-A manual-only Pages workflow is prepared under `.github/workflows/pages.yml`. It deploys only the calculator page assets when explicitly run from GitHub Actions. The workflow has not been run, and no site has been published.
+The live demo is hosted on GitHub Pages. The manual deployment workflow in `.github/workflows/pages.yml` publishes only the calculator page assets.

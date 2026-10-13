@@ -2,9 +2,9 @@
 
 [**Open the live calculator →**](https://chriseatontx.github.io/wolfcalc/)
 
-![calc.wolfcreek scientific calculator](assets/wolfcalc-preview.jpg)
+![wolfcalc scientific calculator](assets/wolfcalc-preview.png)
 
-calc.wolfcreek is a browser-based scientific calculator with an original interface informed by vintage graphing calculators. It uses plain HTML, CSS, and JavaScript and has no external runtime dependencies.
+wolfcalc is a browser-based scientific calculator with an original interface informed by vintage graphing calculators. It uses plain HTML, CSS, and JavaScript and has no external runtime dependencies.
 
 ## Run locally
 

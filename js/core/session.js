@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 import {
   allClear, createCalculator, memoryAdd, memoryClear, memoryRecall, memorySubtract, toggleAngleMode,
 } from './calculator.js';

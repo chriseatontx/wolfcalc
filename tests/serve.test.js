@@ -17,6 +17,7 @@ test('static server serves the demo and rejects unsupported methods and files', 
   await mkdir(path.join(root, 'js'));
   await writeFile(path.join(root, 'index.html'), '<main>demo</main>');
   await writeFile(path.join(root, 'js', 'app.js'), 'export {};');
+  await writeFile(path.join(root, 'package.json'), JSON.stringify({ version: '1.2.3' }));
   t.after(() => rm(root, { recursive: true, force: true }));
 
   const server = createServer(root);
@@ -35,9 +36,15 @@ test('static server serves the demo and rejects unsupported methods and files', 
   assert.match(module.headers.get('content-type'), /javascript/);
   assert.equal(await module.text(), 'export {};');
 
+  const packageInfo = await fetch(`${base}/package.json`);
+  assert.equal(packageInfo.status, 200);
+  assert.equal(packageInfo.headers.get('content-type'), 'application/json; charset=utf-8');
+  assert.deepEqual(await packageInfo.json(), { version: '1.2.3' });
+
   const missing = await fetch(`${base}/secret.txt`);
   assert.equal(missing.status, 404);
   const post = await fetch(`${base}/`, { method: 'POST' });
   assert.equal(post.status, 405);
   assert.equal(post.headers.get('allow'), 'GET, HEAD');
 });
+

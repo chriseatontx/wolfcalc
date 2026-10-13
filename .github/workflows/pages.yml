@@ -30,6 +30,7 @@ jobs:
           mkdir -p _site
           cp index.html styles.css _site/
           cp -R js _site/js
+          cp package.json _site/package.json
       - name: Upload calculator site
         uses: actions/upload-pages-artifact@v3
         with:
@@ -37,3 +38,4 @@ jobs:
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
+

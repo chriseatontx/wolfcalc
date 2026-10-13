@@ -24,6 +24,10 @@ npm test
 
 The full repository test suite is also available with `npm run test:all`.
 
+## Versioning and releases
+
+`package.json` is the source of truth for the calculator version. The version is shown in the calculator's header and included in the GitHub Pages deployment. When publishing a GitHub release, use a matching `v`-prefixed tag, such as `v0.1.0` for package version `0.1.0`.
+
 ## Features
 
 - Arithmetic with precedence, parentheses, unary signs, and chained expressions
@@ -50,3 +54,4 @@ This project is available under the MIT License. See `LICENSE` for the terms.
 ## GitHub Pages
 
 The live demo is hosted on GitHub Pages. The manual deployment workflow in `.github/workflows/pages.yml` publishes only the calculator page assets.
+

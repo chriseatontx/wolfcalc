@@ -1,4 +1,3 @@
-Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyScientific } from '../js/core/scientific.js';

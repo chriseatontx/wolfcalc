@@ -4,6 +4,7 @@ import {
   sessionMemory, toggleSessionAngleMode, toggleShift,
 } from './core/session.js';
 import { completeExpression, sampleGraph } from './core/graph.js';
+import { bindActionClicks } from './core/action-clicks.js';
 
 const keypad = document.getElementById('button-grid');
 const expressionOutput = document.getElementById('expression');
@@ -117,10 +118,7 @@ function activate(button) {
   render();
 }
 
-keypad.addEventListener('click', event => {
-  const button = event.target.closest('button[data-action]');
-  if (button && keypad.contains(button)) activate(button);
-});
+bindActionClicks(document.querySelector('.calculator'), activate);
 
 document.addEventListener('keydown', event => {
   if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;

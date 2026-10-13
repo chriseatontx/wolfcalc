@@ -16,6 +16,7 @@ const calculatorView = document.getElementById('calculator-view');
 const graphView = document.getElementById('graph-view');
 const graphEquation = document.getElementById('graph-equation');
 const graphCanvas = document.getElementById('graph-canvas');
+const appVersion = document.getElementById('app-version');
 
 let state = createSession();
 let graphVisible = false;
@@ -120,6 +121,23 @@ function activate(button) {
 
 bindActionClicks(document.querySelector('.calculator'), activate);
 
+async function loadAppVersion() {
+  if (!appVersion) return;
+  try {
+    const response = await fetch(new URL('package.json', document.baseURI), { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not load application version');
+    const packageInfo = await response.json();
+    if (typeof packageInfo.version !== 'string' || !packageInfo.version.trim()) {
+      throw new Error('Application version is missing');
+    }
+    appVersion.textContent = `v${packageInfo.version}`;
+    appVersion.setAttribute('aria-label', `Version ${packageInfo.version}`);
+  } catch {
+    appVersion.textContent = 'version unavailable';
+    appVersion.setAttribute('aria-label', 'Version unavailable');
+  }
+}
+
 document.addEventListener('keydown', event => {
   if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
   const key = event.key;
@@ -149,3 +167,5 @@ document.addEventListener('keydown', event => {
 });
 
 render();
+loadAppVersion();
+

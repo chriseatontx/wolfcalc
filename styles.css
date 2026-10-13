@@ -74,7 +74,6 @@ button { font: inherit; }
 }
 
 .brand__name { display: grid; gap: 1px; }
-.brand__company { font: 600 9px/1 'Arial Narrow', 'Segoe UI', sans-serif; letter-spacing: 2.5px; }
 .brand__model { font: 700 23px/1 'Arial Narrow', 'Segoe UI', sans-serif; letter-spacing: .4px; }
 .brand__model small { margin-left: 5px; font-size: 9px; font-weight: 600; letter-spacing: 1px; }
 .brand__badge { margin-left: auto; padding: 4px 6px; border: 1px solid #697174; border-radius: 3px; color: #aeb4b2; font-size: 8px; letter-spacing: 1px; }

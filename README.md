@@ -1,4 +1,4 @@
-# calc.wolfcreek
+# wolfcalc
 
 [**Open the live calculator →**](https://chriseatontx.github.io/wolfcalc/)
 

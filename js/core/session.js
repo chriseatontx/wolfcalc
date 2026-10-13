@@ -5,7 +5,7 @@ import { evaluateExpression } from './evaluator.js';
 import { applyScientific } from './scientific.js';
 
 export function createSession() {
-  return { ...createCalculator(), expression: '', history: '', answer: '0', entryStart: true, justEvaluated: false, shiftActive: false, activeOperandExpression: '', nPrOpen: false };
+  return { ...createCalculator(), expression: '', history: '', answer: '0', entryStart: true, justEvaluated: false, shiftActive: false, activeOperandExpression: '', nPrOpen: false, nthRootOpen: false };
 }
 
 export function formatNumber(value) {
@@ -77,11 +77,32 @@ export function enterOperator(state, operator) {
   if (state.error) return state;
   let expression = state.justEvaluated ? state.display : state.expression;
   const nPrOpen = state.nPrOpen && !state.entryStart;
-  if (nPrOpen) expression += ')';
+  const nthRootOpen = state.nthRootOpen && !state.entryStart;
+  if (nPrOpen || nthRootOpen) expression += ')';
   if (!expression) expression = state.display === '0' && operator === '-' ? '' : state.display;
   if (/[+*/^]$/.test(expression) && operator !== '-') expression = expression.slice(0, -1);
   expression += operator;
-  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nPrOpen: false };
+  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nPrOpen: false, nthRootOpen: false };
+}
+
+export function enterNthRoot(state) {
+  if (state.error) return state;
+  const radicand = state.activeOperandExpression
+    || (!state.entryStart || state.justEvaluated ? state.display : '');
+  if (!radicand || (state.entryStart && !state.justEvaluated && ['+', '-', '*', '/', '^', '('].some(character => state.expression.endsWith(character)))) return state;
+  const prefix = expressionPrefix(state);
+  return {
+    ...state,
+    expression: `${prefix}nthRoot(${radicand},`,
+    display: '0',
+    history: '',
+    entryStart: true,
+    justEvaluated: false,
+    shiftActive: false,
+    activeOperandExpression: '',
+    nPrOpen: false,
+    nthRootOpen: true,
+  };
 }
 
 export function enterParenthesis(state, character) {
@@ -226,7 +247,7 @@ export function evaluateSession(state) {
   const value = evaluateExpression(expression, { angleMode: state.angleMode });
   if (value === 'Error') return { ...state, expression, history: expression, display: 'Error', error: true, entryStart: true, justEvaluated: false };
   const answer = formatNumber(value);
-  return { ...state, expression, history: expression, answer, display: answer, error: false, entryStart: true, justEvaluated: true, shiftActive: false, nPrOpen: false };
+  return { ...state, expression, history: expression, answer, display: answer, error: false, entryStart: true, justEvaluated: true, shiftActive: false, nPrOpen: false, nthRootOpen: false };
 }
 
 export function eraseEntry(state) {
@@ -245,7 +266,7 @@ export function clearSessionEntry(state) {
 }
 
 export function clearSession(state) {
-  return { ...allClear(state), answer: state.answer ?? '0', expression: '', history: '', entryStart: true, justEvaluated: false, shiftActive: false };
+  return { ...allClear(state), answer: state.answer ?? '0', expression: '', history: '', entryStart: true, justEvaluated: false, shiftActive: false, nthRootOpen: false };
 }
 
 export function toggleShift(state) {

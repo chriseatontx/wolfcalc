@@ -43,6 +43,15 @@ export function applyScientific(state, operation, operand) {
     case 'cube': result = value ** 3; break;
     case 'absolute': result = Math.abs(value); break;
     case 'power': result = value ** Number(operand); break;
+    case 'nthRoot': {
+      const index = Number(operand);
+      if (!Number.isFinite(index) || index === 0) { result = NaN; break; }
+      if (value < 0) {
+        if (!Number.isInteger(index) || Math.abs(index % 2) !== 1) { result = NaN; break; }
+        result = -((-value) ** (1 / index));
+      } else result = value ** (1 / index);
+      break;
+    }
     case 'nPr': result = permutation(value, Number(operand)); break;
     case 'reciprocal': result = value === 0 ? NaN : 1 / value; break;
     case 'factorial': result = factorial(value); break;

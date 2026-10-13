@@ -1,6 +1,6 @@
 import {
   applyFunction, clearSession, clearSessionEntry, createSession, enterConstant, enterDecimal,
-  enterDigit, enterOperator, enterParenthesis, enterVariable, eraseEntry, evaluateSession, insertAnswer,
+  enterDigit, enterOperator, enterNthRoot, enterParenthesis, enterVariable, eraseEntry, evaluateSession, insertAnswer,
   sessionMemory, toggleSessionAngleMode, toggleShift,
 } from './core/session.js';
 import { sampleGraph } from './core/graph.js';
@@ -97,7 +97,7 @@ function activate(button) {
   switch (action) {
     case 'digit': state = enterDigit(state, value); break;
     case 'decimal': state = enterDecimal(state); break;
-    case 'operator': state = enterOperator(state, value); break;
+    case 'operator': state = value === '^' && state.shiftActive ? enterNthRoot(state) : enterOperator(state, value); break;
     case 'paren': state = enterParenthesis(state, value); break;
     case 'function': state = applyFunction(state, value); break;
     case 'constant': state = enterConstant(state, value); break;

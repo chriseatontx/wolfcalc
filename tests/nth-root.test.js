@@ -1,3 +1,4 @@
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyScientific } from '../js/core/scientific.js';
@@ -103,3 +104,61 @@ test('root index accepts a scientific function and keypad graphing closes the ro
   assert.equal(completeExpression(state.expression), 'nthRoot(x,3)');
   assert.deepEqual(sampleGraph(state.expression, { xMin: -8, xMax: 8, samples: 2 }).map(point => point.y), [-2, 0, 2]);
 });
+
+test('recovering from an invalid root clears pending root state', () => {
+  let state = createSession();
+  state = enterDigit(state, '8');
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = enterDigit(state, '0');
+  state = evaluateSession(state);
+  assert.equal(state.display, 'Error');
+
+  state = enterDigit(state, '2');
+  state = enterOperator(state, '+');
+  state = enterDigit(state, '3');
+  assert.equal(evaluateSession(state).display, '5');
+});
+
+test('a completed constant root index closes before the next operator', () => {
+  let state = createSession();
+  for (const digit of '16') state = enterDigit(state, digit);
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = enterConstant(state, 'pi');
+  state = enterOperator(state, '+');
+  state = enterDigit(state, '1');
+
+  const result = Number(evaluateSession(state).display);
+  assert.ok(Math.abs(result - (16 ** (1 / Math.PI) + 1)) < 1e-12);
+});
+
+test('nested nth roots all close before continuing the expression', () => {
+  let state = createSession();
+  for (const digit of '16') state = enterDigit(state, digit);
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  for (const digit of '27') state = enterDigit(state, digit);
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = enterDigit(state, '3');
+  state = enterOperator(state, '+');
+  state = enterDigit(state, '1');
+
+  const result = Number(evaluateSession(state).display);
+  assert.ok(Math.abs(result - (16 ** (1 / 3) + 1)) < 1e-12);
+});
+
+test('a function-valued root index closes before continuing the expression', () => {
+  let state = createSession();
+  for (const digit of '16') state = enterDigit(state, digit);
+  state = toggleShift(state);
+  state = enterNthRoot(state);
+  state = applyFunction(state, 'sqrt');
+  state = enterDigit(state, '4');
+  state = enterOperator(state, '+');
+  state = enterDigit(state, '1');
+
+  assert.equal(evaluateSession(state).display, '5');
+});
+

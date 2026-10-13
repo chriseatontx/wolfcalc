@@ -55,14 +55,14 @@ function parse(tokens, angleMode = 'DEG', variables = {}) {
     const operations = {
       sin: 'sin', cos: 'cos', tan: 'tan', asin: 'asin', acos: 'acos', atan: 'atan',
       log: 'log10', log10: 'log10', ln: 'ln', sqrt: 'sqrt', cbrt: 'cubeRoot', abs: 'absolute',
-      cube: 'cube', exp: 'exp', npr: 'nPr',
+      cube: 'cube', exp: 'exp', npr: 'nPr', nthroot: 'nthRoot',
       pow10: 'tenPower',
     };
     if (typeof value === 'string' && operations[value]) {
       if (take() !== '(') throw new SyntaxError('Expected opening parenthesis');
       const operand = sum();
-      const secondOperand = value === 'npr'
-        ? (take() === ',' ? sum() : (() => { throw new SyntaxError('Expected second permutation operand'); })())
+      const secondOperand = value === 'npr' || value === 'nthroot'
+        ? (take() === ',' ? sum() : (() => { throw new SyntaxError('Expected second function operand'); })())
         : undefined;
       if (take() !== ')') throw new SyntaxError('Missing closing parenthesis');
       const result = Number(applyScientific({ display: String(operand), angleMode }, operations[value], secondOperand).display);

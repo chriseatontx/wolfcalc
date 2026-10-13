@@ -1,3 +1,4 @@
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 import {
   allClear, createCalculator, memoryAdd, memoryClear, memoryRecall, memorySubtract, toggleAngleMode,
 } from './calculator.js';
@@ -5,7 +6,7 @@ import { evaluateExpression } from './evaluator.js';
 import { applyScientific } from './scientific.js';
 
 export function createSession() {
-  return { ...createCalculator(), expression: '', history: '', answer: '0', entryStart: true, justEvaluated: false, shiftActive: false, activeOperandExpression: '', nPrOpen: false };
+  return { ...createCalculator(), expression: '', history: '', answer: '0', entryStart: true, justEvaluated: false, shiftActive: false, activeOperandExpression: '', nPrOpen: false, nthRootOpen: false, nthRootDepth: 0 };
 }
 
 export function formatNumber(value) {
@@ -15,7 +16,7 @@ export function formatNumber(value) {
 }
 
 function freshEntry(state) {
-  return { ...state, expression: '', history: '', display: '0', error: false, entryStart: true, justEvaluated: false, activeOperandExpression: '', nPrOpen: false };
+  return { ...state, expression: '', history: '', display: '0', error: false, entryStart: true, justEvaluated: false, activeOperandExpression: '', nPrOpen: false, nthRootOpen: false, nthRootDepth: 0 };
 }
 
 function expressionPrefix(state) {
@@ -77,11 +78,67 @@ export function enterOperator(state, operator) {
   if (state.error) return state;
   let expression = state.justEvaluated ? state.display : state.expression;
   const nPrOpen = state.nPrOpen && !state.entryStart;
+  const nthRootDepth = state.nthRootDepth ?? (state.nthRootOpen ? 1 : 0);
+  const completedOperand = !state.entryStart || /[0-9πe)!%]$/.test(expression);
+  const rootsToClose = nthRootDepth > 0 && completedOperand ? pendingRootClosures(expression, nthRootDepth) : 0;
   if (nPrOpen) expression += ')';
+  if (rootsToClose) expression += ')'.repeat(rootsToClose);
   if (!expression) expression = state.display === '0' && operator === '-' ? '' : state.display;
   if (/[+*/^]$/.test(expression) && operator !== '-') expression = expression.slice(0, -1);
   expression += operator;
-  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nPrOpen: false };
+  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nPrOpen: false, nthRootOpen: rootsToClose ? false : state.nthRootOpen, nthRootDepth: rootsToClose ? 0 : nthRootDepth };
+}
+
+function lastUnclosedParenthesisIndex(expression) {
+  let depth = 0;
+  for (let index = expression.length - 1; index >= 0; index -= 1) {
+    if (expression[index] === ')') depth += 1;
+    else if (expression[index] === '(') {
+      if (depth === 0) return index;
+      depth -= 1;
+    }
+  }
+  return -1;
+}
+
+function pendingRootClosures(expression, rootDepth) {
+  const opens = [];
+  for (let index = 0; index < expression.length; index += 1) {
+    if (expression[index] === '(') opens.push(index);
+    else if (expression[index] === ')') opens.pop();
+  }
+  const firstRootOpen = opens.findIndex(index => expression.slice(0, index).endsWith('nthRoot'));
+  if (firstRootOpen < 0) return rootDepth;
+  return Math.max(rootDepth, opens.length - firstRootOpen);
+}
+
+export function enterNthRoot(state) {
+  if (state.error) return state;
+  const expression = state.justEvaluated ? state.display : state.expression;
+  let radicand = '';
+  if (state.activeOperandExpression && expression.endsWith(state.activeOperandExpression)) {
+    radicand = state.activeOperandExpression;
+  } else if (expression.endsWith('π') || expression.endsWith('e')) {
+    radicand = expression.slice(-1);
+  } else if (state.display && expression.endsWith(state.display)) {
+    radicand = state.display;
+  }
+  const lastCharacter = expression.slice(-1);
+  if (!radicand || (!state.justEvaluated && ['+', '-', '*', '/', '^', '(', ','].includes(lastCharacter))) return state;
+  const prefix = state.justEvaluated ? '' : expression.slice(0, -radicand.length);
+  return {
+    ...state,
+    expression: `${prefix}nthRoot(${radicand},`,
+    display: '0',
+    history: '',
+    entryStart: true,
+    justEvaluated: false,
+    shiftActive: false,
+    activeOperandExpression: '',
+    nPrOpen: false,
+    nthRootOpen: true,
+    nthRootDepth: (state.nthRootDepth ?? (state.nthRootOpen ? 1 : 0)) + 1,
+  };
 }
 
 export function enterParenthesis(state, character) {
@@ -95,8 +152,12 @@ export function enterParenthesis(state, character) {
   const opens = (expression.match(/\(/g) || []).length;
   const closes = (expression.match(/\)/g) || []).length;
   if (opens <= closes || /[+\-*/^(]$/.test(expression)) return state;
+  const closeIndex = lastUnclosedParenthesisIndex(expression);
+  const closesNthRoot = state.nthRootOpen && closeIndex >= 0 && expression.slice(0, closeIndex).endsWith('nthRoot');
   expression += ')';
-  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '' };
+  const nthRootDepth = state.nthRootDepth ?? (state.nthRootOpen ? 1 : 0);
+  const nextNthRootDepth = closesNthRoot ? Math.max(0, nthRootDepth - 1) : nthRootDepth;
+  return { ...state, expression, entryStart: true, justEvaluated: false, history: '', activeOperandExpression: '', nthRootOpen: nextNthRootDepth > 0, nthRootDepth: nextNthRootDepth };
 }
 
 const inverseFunctions = {
@@ -150,7 +211,7 @@ export function applyFunction(state, requestedOperation) {
 
   let expression;
   let operandExpression;
-  if (state.entryStart && /[+\-*/^(]$/.test(state.expression)) {
+  if (state.entryStart && ['+', '-', '*', '/', '^', '(', ','].includes(state.expression.slice(-1))) {
     const functionName = operation === 'tenPower' ? 'pow10'
       : operation === 'cubeRoot' ? 'cbrt'
         : operation === 'absolute' ? 'abs' : operation;
@@ -224,13 +285,13 @@ export function evaluateSession(state) {
   const missingCloses = (expression.match(/\(/g) || []).length - (expression.match(/\)/g) || []).length;
   if (missingCloses > 0) expression += ')'.repeat(missingCloses);
   const value = evaluateExpression(expression, { angleMode: state.angleMode });
-  if (value === 'Error') return { ...state, expression, history: expression, display: 'Error', error: true, entryStart: true, justEvaluated: false };
+  if (value === 'Error') return { ...state, expression, history: expression, display: 'Error', error: true, entryStart: true, justEvaluated: false, nthRootOpen: false, nthRootDepth: 0 };
   const answer = formatNumber(value);
-  return { ...state, expression, history: expression, answer, display: answer, error: false, entryStart: true, justEvaluated: true, shiftActive: false, nPrOpen: false };
+  return { ...state, expression, history: expression, answer, display: answer, error: false, entryStart: true, justEvaluated: true, shiftActive: false, nPrOpen: false, nthRootOpen: false, nthRootDepth: 0 };
 }
 
 export function eraseEntry(state) {
-  if (state.error) return { ...state, expression: '', display: '0', history: '', error: false, entryStart: true, justEvaluated: false };
+  if (state.error) return { ...state, expression: '', display: '0', history: '', error: false, entryStart: true, justEvaluated: false, nthRootOpen: false, nthRootDepth: 0 };
   if (state.entryStart) return { ...state, display: '0' };
   const display = state.display.length > 1 ? state.display.slice(0, -1) : '0';
   const expression = state.expression.endsWith(state.display)
@@ -245,7 +306,7 @@ export function clearSessionEntry(state) {
 }
 
 export function clearSession(state) {
-  return { ...allClear(state), answer: state.answer ?? '0', expression: '', history: '', entryStart: true, justEvaluated: false, shiftActive: false };
+  return { ...allClear(state), answer: state.answer ?? '0', expression: '', history: '', entryStart: true, justEvaluated: false, shiftActive: false, nthRootOpen: false, nthRootDepth: 0 };
 }
 
 export function toggleShift(state) {
@@ -267,3 +328,4 @@ export function sessionMemory(state, command) {
   }
   return result;
 }
+

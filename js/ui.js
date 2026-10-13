@@ -1,9 +1,9 @@
 import {
   applyFunction, clearSession, clearSessionEntry, createSession, enterConstant, enterDecimal,
-  enterDigit, enterOperator, enterParenthesis, enterVariable, eraseEntry, evaluateSession, insertAnswer,
+  enterDigit, enterOperator, enterNthRoot, enterParenthesis, enterVariable, eraseEntry, evaluateSession, insertAnswer,
   sessionMemory, toggleSessionAngleMode, toggleShift,
 } from './core/session.js';
-import { sampleGraph } from './core/graph.js';
+import { completeExpression, sampleGraph } from './core/graph.js';
 import { bindActionClicks } from './core/action-clicks.js';
 
 const keypad = document.getElementById('button-grid');
@@ -21,7 +21,7 @@ let state = createSession();
 let graphVisible = false;
 
 function drawGraph() {
-  const equation = state.expression || state.history || 'x';
+  const equation = completeExpression(state.expression || state.history || 'x');
   graphEquation.textContent = `y = ${equation}`;
   graphCanvas.setAttribute('aria-label', `Graph of y equals ${equation}`);
   const bounds = graphCanvas.getBoundingClientRect();
@@ -98,7 +98,7 @@ function activate(button) {
   switch (action) {
     case 'digit': state = enterDigit(state, value); break;
     case 'decimal': state = enterDecimal(state); break;
-    case 'operator': state = enterOperator(state, value); break;
+    case 'operator': state = value === '^' && state.shiftActive ? enterNthRoot(state) : enterOperator(state, value); break;
     case 'paren': state = enterParenthesis(state, value); break;
     case 'function': state = applyFunction(state, value); break;
     case 'constant': state = enterConstant(state, value); break;
@@ -132,7 +132,7 @@ document.addEventListener('keydown', event => {
   else if (key === 'Backspace') target = keypad.querySelector('[data-action="backspace"]');
   else if (key === 'Delete') target = keypad.querySelector('[data-action="clear-entry"]');
   else if (key === 'Escape') target = keypad.querySelector('[data-action="clear"]');
-  else if (key === 'Shift') target = keypad.querySelector('[data-action="shift"]');
+  else if (key.toLowerCase() === 'q') target = keypad.querySelector('[data-action="shift"]');
   else if (key.toLowerCase() === 'd') target = keypad.querySelector('[data-action="angle"]');
   else if (key.toLowerCase() === 'a') target = keypad.querySelector('[data-action="answer"]');
   else if (key.toLowerCase() === 'x') target = keypad.querySelector('[data-action="variable"]');

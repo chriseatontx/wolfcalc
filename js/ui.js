@@ -57,7 +57,9 @@ function drawGraph() {
   context.moveTo(0, py(0)); context.lineTo(width, py(0));
   context.stroke();
 
-  const points = sampleGraph(equation, { xMin, xMax, samples: 280, angleMode: state.angleMode });
+  const points = sampleGraph(equation, {
+    xMin, xMax, yMin, yMax, samples: 280, angleMode: state.angleMode,
+  });
   context.strokeStyle = '#263b2d';
   context.lineWidth = 2.1;
   context.beginPath();
@@ -168,4 +170,3 @@ document.addEventListener('keydown', event => {
 
 render();
 loadAppVersion();
-

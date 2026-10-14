@@ -26,7 +26,13 @@ The full repository test suite is also available with `npm run test:all`.
 
 ## Versioning and releases
 
-`package.json` is the source of truth for the calculator version. The version is shown in the calculator's header and included in the GitHub Pages deployment. When publishing a GitHub release, use a matching `v`-prefixed tag, such as `v0.1.0` for package version `0.1.0`.
+`package.json` is the source of truth for the calculator version. The version is shown in the calculator's header and included in the GitHub Pages deployment. For an intentional patch release, run:
+
+```powershell
+npm run version:patch
+```
+
+Review the updated `package.json`, commit it with the shipped change, and use a matching `v`-prefixed tag when publishing a GitHub release. CI requires every change to the shipped calculator files (`index.html`, `styles.css`, or `js/`) to increase the valid semantic version compared with its base revision. Documentation, tests, and development-only files do not require a version bump.
 
 ## Features
 

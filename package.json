@@ -1,12 +1,13 @@
 {
   "name": "calc-wolfcreek",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "calc.wolfcreek is a browser-based scientific calculator with an original vintage-inspired interface.",
   "scripts": {
     "start": "node scripts/serve.js",
     "test": "node --test tests/*.test.js",
-    "test:all": "node --test"
+    "test:all": "node --test",
+    "version:patch": "npm version patch --no-git-tag-version"
   }
 }

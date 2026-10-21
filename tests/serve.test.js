@@ -18,11 +18,15 @@ test('static server serves the demo and rejects unsupported methods and files', 
   await writeFile(path.join(root, 'index.html'), '<main>demo</main>');
   await writeFile(path.join(root, 'js', 'app.js'), 'export {};');
   await writeFile(path.join(root, 'package.json'), JSON.stringify({ version: '1.2.3' }));
-  t.after(() => rm(root, { recursive: true, force: true }));
 
-  const server = createServer(root);
+  let server;
+  t.after(async () => {
+    if (server) await new Promise(resolve => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  });
+
+  server = createServer(root);
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => server.close(resolve)));
   const address = server.address();
   const base = `http://127.0.0.1:${address.port}`;
 
